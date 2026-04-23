@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: the-echo-field
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeployTrigger: commit
+    healthCheckPath: /health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: ENABLE_TD
+        value: "false"
+      - key: TD_WS_URL
+        value: ws://127.0.0.1:9980
+      - key: OPENAI_TEXT_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_TTS_MODEL
+        value: gpt-4o-mini-tts
+      - key: OPENAI_TTS_VOICE
+        value: cedar
+      - key: AUDIO_MAX_FILES
+        value: "20"
+      - key: AUDIO_MAX_AGE_HOURS
+        value: "6"

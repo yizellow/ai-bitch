@@ -58,6 +58,44 @@ Open:
 http://localhost:3000
 ```
 
+## Deploy on Render
+
+This project is a better fit for Render than Netlify because it needs a real Node.js server for:
+
+- `GET /health`
+- `POST /api/message`
+- OpenAI text generation
+- OpenAI TTS generation
+
+The repo includes [render.yaml](render.yaml), so you can deploy it as a Render Blueprint or create a Web Service manually with the same settings.
+
+### Render settings
+
+- Runtime: `Node`
+- Build Command: `npm install`
+- Start Command: `npm start`
+- Health Check Path: `/health`
+
+### Required environment variables
+
+Set these in the Render dashboard:
+
+```bash
+OPENAI_API_KEY=your_key
+PORT=10000
+ENABLE_TD=false
+TD_WS_URL=ws://127.0.0.1:9980
+OPENAI_TEXT_MODEL=gpt-4o-mini
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=cedar
+AUDIO_MAX_FILES=20
+AUDIO_MAX_AGE_HOURS=6
+```
+
+### Important note about audio files
+
+This app writes generated MP3 files to `public/audio/`. On free cloud services, the local filesystem is usually ephemeral, so those files can disappear after restarts or redeploys. That is fine for demos, but not for permanent storage.
+
 ## API
 
 ### `GET /health`
