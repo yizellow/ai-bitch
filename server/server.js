@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateAssistantText } from "./openai.js";
-import { createSpeechFile } from "./tts.js";
+import { createSpeechPayload } from "./tts.js";
 import { sendToTouchDesigner } from "./td.js";
 import { createMessageId } from "./queue.js";
 import { cleanupAudioFiles, deleteAllAudioFiles } from "./audioCleanup.js";
@@ -46,10 +46,13 @@ app.post("/api/message", async (req, res) => {
 
   try {
     const assistantText = await generateAssistantText(userText);
-    let audioUrl = null;
+    let audioBase64 = null;
+    let audioMimeType = null;
 
     try {
-      audioUrl = await createSpeechFile({ id, text: assistantText, audioDir });
+      const audioPayload = await createSpeechPayload({ text: assistantText });
+      audioBase64 = audioPayload.audioBase64;
+      audioMimeType = audioPayload.audioMimeType;
     } catch (error) {
       console.error("[tts] Failed:", error);
     }
@@ -65,7 +68,9 @@ app.post("/api/message", async (req, res) => {
       id,
       userText,
       assistantText,
-      audioUrl,
+      audioUrl: null,
+      audioBase64,
+      audioMimeType,
       createdAt
     });
   } catch (error) {

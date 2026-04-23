@@ -1,6 +1,6 @@
 # Single-Device AI Voice Robot
 
-A local MVP built with plain HTML/CSS/Vanilla JS and Node.js + Express. The user types text in the browser, the server generates a short AI response with OpenAI, converts that response into an MP3 with OpenAI TTS, and the frontend plays each audio file through a FIFO queue.
+A local MVP built with plain HTML/CSS/Vanilla JS and Node.js + Express. The user types text in the browser, the server generates a short AI response with OpenAI, converts that response into speech with OpenAI TTS, and the frontend plays each response through a FIFO queue.
 
 ## File Structure
 
@@ -17,7 +17,6 @@ public/
   index.html
   style.css
   app.js
-  audio/
 package.json
 .env.example
 README.md
@@ -38,8 +37,6 @@ PORT=3000
 TD_WS_URL=ws://127.0.0.1:9980
 ENABLE_TD=false
 OPENAI_TTS_VOICE=cedar
-AUDIO_MAX_FILES=50
-AUDIO_MAX_AGE_HOURS=24
 ```
 
 ## Persona
@@ -88,13 +85,11 @@ TD_WS_URL=ws://127.0.0.1:9980
 OPENAI_TEXT_MODEL=gpt-4o-mini
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=cedar
-AUDIO_MAX_FILES=20
-AUDIO_MAX_AGE_HOURS=6
 ```
 
 ### Important note about audio files
 
-This app writes generated MP3 files to `public/audio/`. On free cloud services, the local filesystem is usually ephemeral, so those files can disappear after restarts or redeploys. That is fine for demos, but not for permanent storage.
+This app returns TTS audio directly to the browser without saving new MP3 files on disk. The legacy `DELETE /api/audio` route remains only to remove older files that may already exist in `public/audio/`.
 
 ## API
 
@@ -123,12 +118,14 @@ Response:
   "id": "msg_20260423T120000000Z_001",
   "userText": "Hello, introduce yourself.",
   "assistantText": "Hello. I am ORIN, a quiet archive machine living inside this device.",
-  "audioUrl": "/audio/msg_20260423T120000000Z_001.mp3",
+  "audioUrl": null,
+  "audioBase64": "<base64-audio>",
+  "audioMimeType": "audio/mpeg",
   "createdAt": "2026-04-23T12:00:00.000Z"
 }
 ```
 
-If TTS fails, the server still returns the text response with `audioUrl: null`.
+If TTS fails, the server still returns the text response with `audioUrl: null` and `audioBase64: null`.
 
 ### `POST /api/td/broadcast`
 
@@ -143,7 +140,7 @@ Request:
 
 ### `DELETE /api/audio`
 
-Deletes all generated MP3 files in `public/audio/`.
+Deletes any existing legacy MP3 files in `public/audio/`.
 
 ```json
 {
@@ -208,5 +205,5 @@ Rules:
 - OpenAI TTS uses `gpt-4o-mini-tts`.
 - The default voice is `cedar`, with instructions for a very low, calm male voice.
 - The assistant persona is ORIN: a quiet archive machine inside the device, designed for short spoken installation responses.
-- Audio cleanup runs when the server starts. By default, it keeps at most 50 MP3 files and deletes files older than 24 hours.
+- New TTS responses are returned directly to the browser without being saved as MP3 files.
 - For public installations, clearly disclose that the voice is AI-generated.

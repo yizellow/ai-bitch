@@ -52,6 +52,13 @@ if (form && input && submitButton) {
           audioUrl: result.audioUrl,
           status: "queued"
         });
+      } else if (result.audioBase64) {
+        enqueue({
+          id: result.id,
+          text: result.assistantText,
+          audioUrl: createAudioObjectUrl(result.audioBase64, result.audioMimeType),
+          status: "queued"
+        });
       } else {
         setPlaybackStatus("No audio for this response");
       }
@@ -186,6 +193,7 @@ function onAudioEnded(item) {
   state.isPlaying = false;
   state.currentItem = null;
   state.audio = null;
+  releaseAudioObjectUrl(item);
   setPlaybackStatus(`${item.id} finished`);
   renderQueue();
   playNext();
@@ -196,6 +204,7 @@ function onAudioError(item) {
   state.isPlaying = false;
   state.currentItem = null;
   state.audio = null;
+  releaseAudioObjectUrl(item);
   setPlaybackStatus(`${item.id} audio failed`);
   renderQueue();
   playNext();
@@ -220,11 +229,11 @@ function appendMessage(result) {
   messagesEl.append(
     createMessageBubble({
       role: "Echo",
-      text: result.audioUrl
+      text: result.audioUrl || result.audioBase64
         ? result.assistantText
         : `${result.assistantText}\n\nNo audio was generated for this response. Check the server TTS log.`,
       time: result.createdAt,
-      type: result.audioUrl ? "ai" : "error",
+      type: result.audioUrl || result.audioBase64 ? "ai" : "error",
       id: result.id
     })
   );
@@ -363,6 +372,24 @@ function scrollMessagesToBottom() {
   requestAnimationFrame(() => {
     messagesEl.scrollTop = messagesEl.scrollHeight;
   });
+}
+
+function createAudioObjectUrl(audioBase64, audioMimeType = "audio/mpeg") {
+  const binary = window.atob(audioBase64);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  const blob = new Blob([bytes], { type: audioMimeType });
+  return URL.createObjectURL(blob);
+}
+
+function releaseAudioObjectUrl(item) {
+  if (item?.audioUrl?.startsWith("blob:")) {
+    URL.revokeObjectURL(item.audioUrl);
+  }
 }
 
 function translateStatus(status) {
