@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Single-Device AI Voice Robot</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel">
+        <header class="header">
+          <div>
+            <p class="eyebrow">Single Device Voice Bot</p>
+            <h1>Single-Device AI Voice Robot</h1>
+          </div>
+          <div class="status" id="playbackStatus">Idle</div>
+        </header>
+
+        <form class="composer" id="messageForm">
+          <label class="input-label" for="messageInput">Text input</label>
+          <textarea id="messageInput" name="text" rows="4" maxlength="200" placeholder="Type one sentence for the device"></textarea>
+          <div class="composer-actions">
+            <span id="charCount">0 / 200</span>
+            <button id="submitButton" type="submit">Send</button>
+          </div>
+        </form>
+
+        <section class="toolbar" aria-label="Toolbar">
+          <label class="td-toggle hidden">
+            <input type="checkbox" id="tdToggle">
+            TouchDesigner
+          </label>
+          <button class="secondary" id="clearButton" type="button">Clear</button>
+          <button class="secondary" id="clearAudioButton" type="button">Clear Audio Files</button>
+        </section>
+
+        <section class="content-grid">
+          <div class="messages-wrap">
+            <h2>Messages</h2>
+            <div class="messages" id="messages"></div>
+          </div>
+
+          <aside class="queue-wrap">
+            <h2>Playback Queue</h2>
+            <div class="current" id="currentItem">Nothing is playing</div>
+            <ol class="queue" id="queueList"></ol>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

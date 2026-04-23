@@ -1,0 +1,267 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f3ee;
+  --panel: #ffffff;
+  --text: #202124;
+  --muted: #6f747b;
+  --line: #d9d2c8;
+  --accent: #126a5b;
+  --accent-strong: #0e4f45;
+  --danger: #a33232;
+  --soft: #edf7f4;
+  --shadow: 0 24px 80px rgba(30, 32, 34, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    linear-gradient(135deg, rgba(18, 106, 91, 0.14), transparent 34%),
+    linear-gradient(225deg, rgba(180, 70, 44, 0.12), transparent 34%),
+    var(--bg);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(217, 210, 200, 0.9);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 4.2rem);
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+.status,
+.current {
+  min-width: 168px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--accent-strong);
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.composer {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.input-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 108px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: var(--text);
+  background: #fffdf9;
+  outline: none;
+}
+
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(18, 106, 91, 0.16);
+}
+
+.composer-actions,
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#charCount {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  padding: 11px 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-strong);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--text);
+}
+
+.secondary:hover {
+  background: #f3f0eb;
+}
+
+.toolbar {
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.hidden {
+  display: none;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  gap: 22px;
+}
+
+.messages,
+.queue {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.message,
+.queue-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf9;
+  padding: 14px;
+}
+
+.message-meta,
+.queue-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+
+.message p {
+  margin: 8px 0 0;
+  line-height: 1.65;
+}
+
+.message strong {
+  color: var(--accent-strong);
+}
+
+.queue {
+  list-style-position: inside;
+}
+
+.queue-item {
+  display: grid;
+  gap: 6px;
+}
+
+.queue-item[data-status="playing"] {
+  border-color: var(--accent);
+  background: var(--soft);
+}
+
+.queue-item[data-status="error"] {
+  border-color: var(--danger);
+}
+
+.empty {
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  text-align: center;
+}
+
+.error {
+  color: var(--danger);
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100% - 20px, 1120px);
+    padding: 10px 0;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .header,
+  .content-grid {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .status,
+  .current {
+    min-width: 0;
+    width: 100%;
+  }
+}

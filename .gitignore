@@ -1,0 +1,4 @@
+.env
+node_modules/
+public/audio/*.mp3
+npm-debug.log*

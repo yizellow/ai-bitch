@@ -1,0 +1,129 @@
+import "dotenv/config";
+import express from "express";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { generateAssistantText } from "./openai.js";
+import { createSpeechFile } from "./tts.js";
+import { sendToTouchDesigner } from "./td.js";
+import { createMessageId } from "./queue.js";
+import { cleanupAudioFiles, deleteAllAudioFiles } from "./audioCleanup.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, "..");
+const publicDir = path.join(rootDir, "public");
+const audioDir = path.join(publicDir, "audio");
+
+const app = express();
+const port = Number(process.env.PORT || 3000);
+const maxInputLength = 200;
+
+app.use(express.json({ limit: "32kb" }));
+app.use(express.static(publicDir));
+
+app.get("/health", (req, res) => {
+  res.json({ ok: true });
+});
+
+app.post("/api/message", async (req, res) => {
+  const userText = normalizeInput(req.body?.text);
+
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: "OPENAI_API_KEY is not configured." });
+  }
+
+  if (!userText) {
+    return res.status(400).json({ error: "text is required." });
+  }
+
+  if (userText.length > maxInputLength) {
+    return res.status(400).json({ error: `text must be ${maxInputLength} characters or fewer.` });
+  }
+
+  const id = createMessageId();
+  const createdAt = new Date().toISOString();
+
+  try {
+    const assistantText = await generateAssistantText(userText);
+    let audioUrl = null;
+
+    try {
+      audioUrl = await createSpeechFile({ id, text: assistantText, audioDir });
+    } catch (error) {
+      console.error("[tts] Failed:", error);
+    }
+
+    sendToTouchDesigner({
+      type: "assistant_message",
+      id,
+      text: assistantText,
+      createdAt
+    });
+
+    res.json({
+      id,
+      userText,
+      assistantText,
+      audioUrl,
+      createdAt
+    });
+  } catch (error) {
+    console.error("[ai] Failed:", error);
+    res.status(500).json({ error: "Failed to generate assistant response." });
+  }
+});
+
+app.post("/api/td/broadcast", (req, res) => {
+  const id = typeof req.body?.id === "string" ? req.body.id : createMessageId();
+  const text = normalizeInput(req.body?.text);
+
+  if (!text) {
+    return res.status(400).json({ error: "text is required." });
+  }
+
+  sendToTouchDesigner({
+    type: "assistant_message",
+    id,
+    text,
+    createdAt: new Date().toISOString()
+  });
+
+  res.json({ ok: true });
+});
+
+app.delete("/api/audio", async (req, res) => {
+  try {
+    const result = await deleteAllAudioFiles(audioDir);
+    res.json({ ok: true, ...result });
+  } catch (error) {
+    console.error("[audio] Failed to delete audio files:", error);
+    res.status(500).json({ error: "Failed to delete audio files." });
+  }
+});
+
+app.use((err, req, res, next) => {
+  console.error("[server] Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error." });
+});
+
+await fs.mkdir(audioDir, { recursive: true });
+cleanupAudioFiles(audioDir)
+  .then((result) => {
+    console.log(`[audio] Cleanup complete. Deleted ${result.deleted}, kept ${result.kept}.`);
+  })
+  .catch((error) => {
+    console.warn("[audio] Cleanup failed:", error.message);
+  });
+
+app.listen(port, () => {
+  console.log(`AI voice bot running at http://localhost:${port}`);
+});
+
+function normalizeInput(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.replace(/\s+/g, " ").trim();
+}
