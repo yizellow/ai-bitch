@@ -3,7 +3,7 @@ import express from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { generateAssistantText } from "./openai.js";
+import { generateAssistantReply } from "./openai.js";
 import { createSpeechPayload } from "./tts.js";
 import { sendToTouchDesigner } from "./td.js";
 import { createMessageId } from "./queue.js";
@@ -18,6 +18,11 @@ const audioDir = path.join(publicDir, "audio");
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const maxInputLength = 200;
+const storyState = {
+  interactionCount: 0,
+  storyStage: 1,
+  revealedFacts: []
+};
 
 app.use(express.json({ limit: "32kb" }));
 app.use(express.static(publicDir));
@@ -45,7 +50,10 @@ app.post("/api/message", async (req, res) => {
   const createdAt = new Date().toISOString();
 
   try {
-    const assistantText = await generateAssistantText(userText);
+    const nextState = getNextStoryState(storyState);
+    const assistantReply = await generateAssistantReply(userText, nextState);
+    const assistantText = assistantReply.assistantText;
+    applyStoryState(storyState, nextState, assistantReply);
     let audioBase64 = null;
     let audioMimeType = null;
 
@@ -67,11 +75,16 @@ app.post("/api/message", async (req, res) => {
     res.json({
       id,
       userText,
+      summary: assistantReply.summary,
+      memoryFragment: assistantReply.memoryFragment,
+      question: assistantReply.question,
       assistantText,
       audioUrl: null,
       audioBase64,
       audioMimeType,
-      createdAt
+      createdAt,
+      storyStage: storyState.storyStage,
+      interactionCount: storyState.interactionCount
     });
   } catch (error) {
     console.error("[ai] Failed:", error);
@@ -131,4 +144,55 @@ function normalizeInput(value) {
   }
 
   return value.replace(/\s+/g, " ").trim();
+}
+
+function getNextStoryState(currentState) {
+  const interactionCount = currentState.interactionCount + 1;
+
+  return {
+    interactionCount,
+    storyStage: resolveStoryStage(interactionCount),
+    revealedFacts: [...currentState.revealedFacts]
+  };
+}
+
+function resolveStoryStage(interactionCount) {
+  if (interactionCount >= 9) {
+    return 5;
+  }
+
+  if (interactionCount >= 7) {
+    return 4;
+  }
+
+  if (interactionCount >= 5) {
+    return 3;
+  }
+
+  if (interactionCount >= 3) {
+    return 2;
+  }
+
+  return 1;
+}
+
+function applyStoryState(currentState, nextState, reply) {
+  currentState.interactionCount = nextState.interactionCount;
+  currentState.storyStage = nextState.storyStage;
+
+  const facts = [
+    `stage_${nextState.storyStage}`,
+    reply.summary,
+    reply.memoryFragment
+  ];
+
+  for (const fact of facts) {
+    if (fact && !currentState.revealedFacts.includes(fact)) {
+      currentState.revealedFacts.push(fact);
+    }
+  }
+
+  if (currentState.revealedFacts.length > 18) {
+    currentState.revealedFacts = currentState.revealedFacts.slice(-18);
+  }
 }

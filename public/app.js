@@ -26,6 +26,18 @@ if (input && charCount) {
   input.addEventListener("input", () => {
     charCount.textContent = `${input.value.length} / 200`;
   });
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (form && submitButton && !submitButton.disabled) {
+      form.requestSubmit();
+    }
+  });
 }
 
 if (form && input && submitButton) {
