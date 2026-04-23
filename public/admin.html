@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Voice Robot Admin</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body class="admin-page">
+    <main class="admin-shell">
+      <header class="admin-header">
+        <div>
+          <p class="admin-eyebrow">Local Controls</p>
+          <h1>Voice Robot Admin</h1>
+        </div>
+        <a class="admin-link" href="/">Back to Interface</a>
+      </header>
+
+      <section class="admin-grid">
+        <article class="admin-card">
+          <h2>Playback</h2>
+          <div class="admin-status" id="playbackStatus">Idle</div>
+          <div class="admin-current" id="currentItem">Nothing is playing</div>
+        </article>
+
+        <article class="admin-card">
+          <h2>Actions</h2>
+          <div class="admin-actions">
+            <button class="secondary" id="clearButton" type="button">Clear Local Queue</button>
+            <button class="secondary danger-button" id="clearAudioButton" type="button">Delete Audio Files</button>
+          </div>
+          <p class="admin-note">These controls affect generated files and this browser session only.</p>
+        </article>
+
+        <article class="admin-card admin-card-wide">
+          <h2>Playback Queue</h2>
+          <ol class="admin-queue" id="queueList"></ol>
+        </article>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

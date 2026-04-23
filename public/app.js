@@ -17,86 +17,100 @@ const state = {
   audioContext: null
 };
 
-renderMessagesEmpty();
+if (messagesEl) {
+  renderMessagesEmpty();
+}
 renderQueue();
 
-input.addEventListener("input", () => {
-  charCount.textContent = `${input.value.length} / 200`;
-});
+if (input && charCount) {
+  input.addEventListener("input", () => {
+    charCount.textContent = `${input.value.length} / 200`;
+  });
+}
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
+if (form && input && submitButton) {
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
-  const text = input.value.trim();
-  if (!text || submitButton.disabled) {
-    return;
-  }
-
-  submitButton.disabled = true;
-  setPlaybackStatus("Waiting for AI...");
-  unlockAudio();
-
-  try {
-    const result = await sendMessage(text);
-    appendMessage(result);
-
-    if (result.audioUrl) {
-      enqueue({
-        id: result.id,
-        text: result.assistantText,
-        audioUrl: result.audioUrl,
-        status: "queued"
-      });
-    } else {
-      setPlaybackStatus("No audio for this response");
+    const text = input.value.trim();
+    if (!text || submitButton.disabled) {
+      return;
     }
 
-    input.value = "";
-    charCount.textContent = "0 / 200";
-  } catch (error) {
-    appendError(text, error.message);
-    setPlaybackStatus("Error");
-  } finally {
-    submitButton.disabled = false;
-    input.focus();
-  }
-});
+    submitButton.disabled = true;
+    setPlaybackStatus("Waiting for AI...");
+    unlockAudio();
 
-clearButton.addEventListener("click", () => {
-  messagesEl.innerHTML = "";
-  renderMessagesEmpty();
+    try {
+      const result = await sendMessage(text);
+      appendMessage(result);
 
-  state.queue = [];
-  if (state.audio) {
-    state.audio.pause();
-  }
+      if (result.audioUrl) {
+        enqueue({
+          id: result.id,
+          text: result.assistantText,
+          audioUrl: result.audioUrl,
+          status: "queued"
+        });
+      } else {
+        setPlaybackStatus("No audio for this response");
+      }
 
-  state.isPlaying = false;
-  state.currentItem = null;
-  state.audio = null;
-  closeAudioContext();
-  setPlaybackStatus("Idle");
-  renderQueue();
-});
+      input.value = "";
+      if (charCount) {
+        charCount.textContent = "0 / 200";
+      }
+    } catch (error) {
+      appendError(text, error.message);
+      setPlaybackStatus("Error");
+    } finally {
+      submitButton.disabled = false;
+      input.focus();
+    }
+  });
+}
 
-clearAudioButton.addEventListener("click", async () => {
-  const confirmed = window.confirm("Delete all generated audio files on the server?");
+if (clearButton) {
+  clearButton.addEventListener("click", () => {
+    if (messagesEl) {
+      messagesEl.innerHTML = "";
+      renderMessagesEmpty();
+    }
 
-  if (!confirmed) {
-    return;
-  }
+    state.queue = [];
+    if (state.audio) {
+      state.audio.pause();
+    }
 
-  clearAudioButton.disabled = true;
+    state.isPlaying = false;
+    state.currentItem = null;
+    state.audio = null;
+    closeAudioContext();
+    setPlaybackStatus("Idle");
+    renderQueue();
+  });
+}
 
-  try {
-    const result = await deleteAudioFiles();
-    setPlaybackStatus(`Deleted ${result.deleted} audio files`);
-  } catch (error) {
-    setPlaybackStatus("Failed to delete audio files");
-  } finally {
-    clearAudioButton.disabled = false;
-  }
-});
+if (clearAudioButton) {
+  clearAudioButton.addEventListener("click", async () => {
+    const confirmed = window.confirm("Delete all generated audio files on the server?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    clearAudioButton.disabled = true;
+
+    try {
+      const result = await deleteAudioFiles();
+      setPlaybackStatus(`Deleted ${result.deleted} audio files`);
+    } catch (error) {
+      setPlaybackStatus("Failed to delete audio files");
+    } finally {
+      clearAudioButton.disabled = false;
+    }
+  });
+}
 
 async function sendMessage(text) {
   const response = await fetch("/api/message", {
@@ -188,6 +202,10 @@ function onAudioError(item) {
 }
 
 function appendMessage(result) {
+  if (!messagesEl) {
+    return;
+  }
+
   removeEmptyMessage();
 
   messagesEl.append(
@@ -201,7 +219,7 @@ function appendMessage(result) {
 
   messagesEl.append(
     createMessageBubble({
-      role: "AI",
+      role: "Echo",
       text: result.audioUrl
         ? result.assistantText
         : `${result.assistantText}\n\nNo audio was generated for this response. Check the server TTS log.`,
@@ -215,6 +233,10 @@ function appendMessage(result) {
 }
 
 function appendError(userText, message) {
+  if (!messagesEl) {
+    return;
+  }
+
   removeEmptyMessage();
 
   const createdAt = new Date().toISOString();
@@ -241,9 +263,15 @@ function appendError(userText, message) {
 }
 
 function renderQueue() {
-  currentItemEl.textContent = state.currentItem
-    ? `Now playing: ${state.currentItem.id}`
-    : "Nothing is playing";
+  if (currentItemEl) {
+    currentItemEl.textContent = state.currentItem
+      ? `Now playing: ${state.currentItem.id}`
+      : "Nothing is playing";
+  }
+
+  if (!queueListEl) {
+    return;
+  }
 
   queueListEl.innerHTML = "";
 
@@ -271,6 +299,10 @@ function renderQueue() {
 }
 
 function renderMessagesEmpty() {
+  if (!messagesEl) {
+    return;
+  }
+
   if (messagesEl.children.length > 0) {
     return;
   }
@@ -284,6 +316,10 @@ function renderMessagesEmpty() {
 }
 
 function removeEmptyMessage() {
+  if (!messagesEl) {
+    return;
+  }
+
   const empty = messagesEl.querySelector("[data-empty='true']");
   if (empty) {
     empty.remove();
@@ -291,7 +327,9 @@ function removeEmptyMessage() {
 }
 
 function setPlaybackStatus(text) {
-  playbackStatusEl.textContent = text;
+  if (playbackStatusEl) {
+    playbackStatusEl.textContent = text;
+  }
 }
 
 function createMessageBubble({ role, text, time, type, id }) {
@@ -318,6 +356,10 @@ function createMessageBubble({ role, text, time, type, id }) {
 }
 
 function scrollMessagesToBottom() {
+  if (!messagesEl) {
+    return;
+  }
+
   requestAnimationFrame(() => {
     messagesEl.scrollTop = messagesEl.scrollHeight;
   });

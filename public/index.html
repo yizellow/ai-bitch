@@ -9,26 +9,8 @@
   <body>
     <main class="app-shell">
       <section class="panel" aria-label="Single-device AI voice robot">
-        <header class="header">
-          <div class="title-group">
-            <p class="eyebrow">Ritual Voice Interface</p>
-            <h1>Single-Device AI Voice Robot</h1>
-          </div>
-          <div class="status" id="playbackStatus">Idle</div>
-        </header>
-
-        <section class="stage">
-          <div class="messages-wrap">
-            <div class="messages" id="messages" aria-live="polite"></div>
-          </div>
-
-          <aside class="queue-wrap" aria-label="Playback queue">
-            <div class="queue-header">
-              <h2>Playback Queue</h2>
-              <div class="current" id="currentItem">Nothing is playing</div>
-            </div>
-            <ol class="queue" id="queueList"></ol>
-          </aside>
+        <section class="messages-wrap" aria-label="Conversation">
+          <div class="messages" id="messages" aria-live="polite"></div>
         </section>
 
         <section class="input-dock" aria-label="Message input">
@@ -40,15 +22,6 @@
               <button id="submitButton" type="submit">Send</button>
             </div>
           </form>
-
-          <section class="toolbar" aria-label="Toolbar">
-            <label class="td-toggle hidden">
-              <input type="checkbox" id="tdToggle">
-              TouchDesigner
-            </label>
-            <button class="secondary" id="clearButton" type="button">Clear</button>
-            <button class="secondary" id="clearAudioButton" type="button">Clear Audio Files</button>
-          </section>
         </section>
       </section>
     </main>
