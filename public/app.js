@@ -190,36 +190,54 @@ function onAudioError(item) {
 function appendMessage(result) {
   removeEmptyMessage();
 
-  const article = document.createElement("article");
-  article.className = "message";
-  article.innerHTML = `
-    <div class="message-meta">
-      <span>${escapeHtml(result.id)}</span>
-      <span>${formatTime(result.createdAt)}</span>
-    </div>
-    <p><strong>You:</strong> ${escapeHtml(result.userText)}</p>
-    <p><strong>AI:</strong> ${escapeHtml(result.assistantText)}</p>
-    ${result.audioUrl ? "" : '<p class="error">No audio was generated for this response. Check the server TTS log.</p>'}
-  `;
+  messagesEl.append(
+    createMessageBubble({
+      role: "You",
+      text: result.userText,
+      time: result.createdAt,
+      type: "user"
+    })
+  );
 
-  messagesEl.prepend(article);
+  messagesEl.append(
+    createMessageBubble({
+      role: "AI",
+      text: result.audioUrl
+        ? result.assistantText
+        : `${result.assistantText}\n\nNo audio was generated for this response. Check the server TTS log.`,
+      time: result.createdAt,
+      type: result.audioUrl ? "ai" : "error",
+      id: result.id
+    })
+  );
+
+  scrollMessagesToBottom();
 }
 
 function appendError(userText, message) {
   removeEmptyMessage();
 
-  const article = document.createElement("article");
-  article.className = "message";
-  article.innerHTML = `
-    <div class="message-meta">
-      <span>error</span>
-      <span>${formatTime(new Date().toISOString())}</span>
-    </div>
-    <p><strong>You:</strong> ${escapeHtml(userText)}</p>
-    <p class="error"><strong>Error:</strong> ${escapeHtml(message)}</p>
-  `;
+  const createdAt = new Date().toISOString();
 
-  messagesEl.prepend(article);
+  messagesEl.append(
+    createMessageBubble({
+      role: "You",
+      text: userText,
+      time: createdAt,
+      type: "user"
+    })
+  );
+
+  messagesEl.append(
+    createMessageBubble({
+      role: "Error",
+      text: message,
+      time: createdAt,
+      type: "error"
+    })
+  );
+
+  scrollMessagesToBottom();
 }
 
 function renderQueue() {
@@ -257,11 +275,12 @@ function renderMessagesEmpty() {
     return;
   }
 
-  const empty = document.createElement("div");
-  empty.className = "empty";
+  const empty = document.createElement("article");
+  empty.className = "message message-empty";
   empty.dataset.empty = "true";
   empty.textContent = "No messages yet";
   messagesEl.append(empty);
+  scrollMessagesToBottom();
 }
 
 function removeEmptyMessage() {
@@ -273,6 +292,35 @@ function removeEmptyMessage() {
 
 function setPlaybackStatus(text) {
   playbackStatusEl.textContent = text;
+}
+
+function createMessageBubble({ role, text, time, type, id }) {
+  const article = document.createElement("article");
+  article.className = `message message-${type}`;
+
+  const meta = document.createElement("div");
+  meta.className = "message-meta";
+
+  const roleEl = document.createElement("span");
+  roleEl.className = "message-role";
+  roleEl.textContent = role;
+
+  const timeEl = document.createElement("span");
+  timeEl.textContent = id ? `${id} · ${formatTime(time)}` : formatTime(time);
+
+  const textEl = document.createElement("p");
+  textEl.textContent = text;
+
+  meta.append(roleEl, timeEl);
+  article.append(meta, textEl);
+
+  return article;
+}
+
+function scrollMessagesToBottom() {
+  requestAnimationFrame(() => {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  });
 }
 
 function translateStatus(status) {
