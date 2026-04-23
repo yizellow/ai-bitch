@@ -18,7 +18,7 @@ export async function createSpeechFile({ id, text, audioDir }) {
     voice: process.env.OPENAI_TTS_VOICE || "cedar",
     input: text,
     response_format: "mp3",
-    instructions: "Use a very low adult male voice with a deep chest resonance. Do not sound feminine, bright, youthful, or high-pitched. Speak slowly with clear pauses, calm weight, and a grounded installation-like presence."
+    instructions: "Use a very low ancient male voice with deep chest resonance, like an echo speaking from stone ruins. Do not sound feminine, bright, youthful, casual, or high-pitched. Speak slowly with ritual pauses, mournful weight, and a distant ceremonial presence."
   });
 
   const buffer = Buffer.from(await response.arrayBuffer());
